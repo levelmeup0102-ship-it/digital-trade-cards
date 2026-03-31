@@ -60,7 +60,7 @@ export default function Home() {
                 placeholder="팀 이름 (예: 글로벌 드림팀)"
                 className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm mb-3 focus:border-cyan-400 transition" />
               <button onClick={async () => {
-                try { setError(''); await createTeam(teamName); }
+                try { setError(''); await createTeam(teamName); window.location.href = '/'; }
                 catch (e: any) { setError(e.message); }
               }} disabled={!teamName.trim()}
                 className="w-full py-3 bg-cyan-500 text-white font-bold rounded-xl disabled:opacity-40 transition">
@@ -74,7 +74,7 @@ export default function Home() {
                 maxLength={6}
                 className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm mb-3 focus:border-cyan-400 transition text-center tracking-widest text-lg" />
               <button onClick={async () => {
-                try { setError(''); await joinTeam(joinCode); }
+                try { setError(''); await joinTeam(joinCode); window.location.href = '/'; }
                 catch (e: any) { setError(e.message); }
               }} disabled={joinCode.length < 4}
                 className="w-full py-3 bg-cyan-500 text-white font-bold rounded-xl disabled:opacity-40 transition">
@@ -121,6 +121,7 @@ export default function Home() {
               } else {
                 await signIn(email, password);
               }
+              window.location.href = '/';
             } catch (e: any) {
               setError(e.message);
             } finally {
@@ -184,4 +185,3 @@ export default function Home() {
     </div>
   );
 }
-
