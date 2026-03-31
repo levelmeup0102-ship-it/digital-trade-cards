@@ -97,8 +97,8 @@ export default function Home() {
             {mode === 'login' ? '로그인' : '회원가입'}
           </h2>
 
-          <input value={name} onChange={e => { setName(e.target.value); if(mode === 'register') setEmail(e.target.value.replace(/\s/g,'') + '@student.local'); }}
-              placeholder={mode === 'register' ? "이름 (예: 홍길동)" : "이름"}
+         <input value={name} onChange={e => { setName(e.target.value); setEmail(e.target.value.replace(/\s/g,'') + '@student.local'); }}
+              placeholder="이름"
               className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm mb-3 focus:border-cyan-400 transition" />
           <input value={password} onChange={e => setPassword(e.target.value)}
             type="password" placeholder="비밀번호 (6자 이상)"
