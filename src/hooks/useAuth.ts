@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import type { Profile, Team } from '@/types';
 
@@ -12,10 +12,17 @@ export function useAuth() {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      if (session?.user) await fetchProfile(session.user.id);
-      setLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+      } catch (e) {
+        console.error('Auth error:', e);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getSession();
@@ -23,8 +30,12 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setUser(session?.user ?? null);
-        if (session?.user) await fetchProfile(session.user.id);
-        else { setProfile(null); setTeam(null); }
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+          setTeam(null);
+        }
       }
     );
 
@@ -32,22 +43,35 @@ export function useAuth() {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (data) {
-      setProfile(data);
-      if (data.team_id) {
-        const { data: teamData } = await supabase
-          .from('teams')
-          .select('*')
-          .eq('id', data.team_id)
-          .single();
-        setTeam(teamData);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Profile fetch error:', error);
+        setProfile(null);
+        setTeam(null);
+        return;
       }
+      
+      if (data) {
+        setProfile(data);
+        if (data.team_id) {
+          const { data: teamData } = await supabase
+            .from('teams')
+            .select('*')
+            .eq('id', data.team_id)
+            .single();
+          setTeam(teamData ?? null);
+        }
+      }
+    } catch (e) {
+      console.error('Profile error:', e);
+      setProfile(null);
+      setTeam(null);
     }
   };
 
@@ -85,10 +109,12 @@ export function useAuth() {
       .single();
     if (error) throw error;
 
-    await supabase
-      .from('profiles')
-      .update({ team_id: data.id })
-      .eq('id', user.id);
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ team_id: data.id })
+        .eq('id', user.id);
+    }
 
     setTeam(data);
     setProfile(prev => prev ? { ...prev, team_id: data.id } : null);
@@ -103,10 +129,12 @@ export function useAuth() {
       .single();
     if (error || !data) throw new Error('팀 코드를 찾을 수 없습니다');
 
-    await supabase
-      .from('profiles')
-      .update({ team_id: data.id })
-      .eq('id', user.id);
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ team_id: data.id })
+        .eq('id', user.id);
+    }
 
     setTeam(data);
     setProfile(prev => prev ? { ...prev, team_id: data.id } : null);
@@ -114,6 +142,7 @@ export function useAuth() {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
+    if (!user) return;
     const { error } = await supabase
       .from('profiles')
       .update(updates)
