@@ -27,10 +27,10 @@ export default function Dashboard() {
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!authLoading && (!user || !team)) {
+    if (!authLoading && !user) {
       if (typeof window !== 'undefined') window.location.href = '/';
     }
-  }, [authLoading, user, team]);
+  }, [authLoading, user]);
 
   const goTo = useCallback((idx: number) => {
     if (idx >= 0 && idx < ALL_CARDS.length) {
